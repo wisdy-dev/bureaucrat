@@ -130,6 +130,8 @@ defmodule Bureaucrat.MarkdownWriter do
         str -> "#{record.request_path}?#{str}"
       end
 
+    path = String.replace(path, ~r/[-0-9a-f]{36,}/, ":id")
+
     file
     |> puts("#### #{record.assigns.bureaucrat_desc}")
     |> puts("##### Request")
@@ -141,7 +143,18 @@ defmodule Bureaucrat.MarkdownWriter do
       |> puts("* __Request headers:__")
       |> puts("```")
 
-      Enum.each(record.req_headers, fn {header, value} ->
+      filtered_headers = [
+        "authorization"
+      ]
+
+      record.req_headers
+      |> Enum.map(fn {header, value} ->
+        cond do
+          header in filtered_headers -> {header, "***"}
+          true -> {header, value}
+        end
+      end)
+      |> Enum.each(fn {header, value} ->
         puts(file, "#{header}: #{value}")
       end)
 
@@ -167,7 +180,20 @@ defmodule Bureaucrat.MarkdownWriter do
       |> puts("* __Response headers:__")
       |> puts("```")
 
-      Enum.each(record.resp_headers, fn {header, value} ->
+      filtered_headers = [
+        "authorization",
+        "x-expires",
+        "x-request-id"
+      ]
+
+      record.resp_headers
+      |> Enum.map(fn {header, value} ->
+        cond do
+          header in filtered_headers -> {header, "***"}
+          true -> {header, value}
+        end
+      end)
+      |> Enum.each(fn {header, value} ->
         puts(file, "#{header}: #{value}")
       end)
 
@@ -184,8 +210,33 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   def format_body_params(params) do
+    params = filter_params(params)
     {:ok, json} = JSON.encode(params, pretty: true)
     json
+  end
+
+  defp filter_params([_ | _] = params) do
+    Enum.map(params, &filter_params/1)
+  end
+
+  defp filter_params(value) when is_binary(value) do
+    String.replace(value, ~r/[-0-9a-f]{36,}/, "***")
+  end
+
+  defp filter_params(params) do
+    params
+    |> Enum.map(fn {key, value} ->
+      cond do
+        value == nil or value == "" -> {key, value}
+        to_string(key) =~ ~r/(email|token|id|updated_at|identifier|inserted_at)\z/ -> {key, "***"}
+        match?(%{__struct__: _}, value) -> {key, value}
+        is_binary(value) -> {key, value}
+        is_list(value) -> {key, filter_params(value)}
+        is_map(value) -> {key, filter_params(value)}
+        true -> {key, value}
+      end
+    end)
+    |> Map.new()
   end
 
   defp format_resp_body("") do
@@ -194,7 +245,8 @@ defmodule Bureaucrat.MarkdownWriter do
 
   defp format_resp_body(string) do
     {:ok, struct} = JSON.decode(string)
-    {:ok, json} = JSON.encode(struct, pretty: true)
+    params = filter_params(struct)
+    {:ok, json} = JSON.encode(params, pretty: true)
     json
   end
 
