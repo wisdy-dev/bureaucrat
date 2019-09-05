@@ -215,7 +215,7 @@ defmodule Bureaucrat.MarkdownWriter do
     json
   end
 
-  defp filter_params([_ | _] = params) do
+  defp filter_params(params) when is_list(params) do
     Enum.map(params, &filter_params/1)
   end
 
