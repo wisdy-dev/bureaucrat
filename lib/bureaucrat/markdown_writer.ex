@@ -224,11 +224,21 @@ defmodule Bureaucrat.MarkdownWriter do
   end
 
   defp filter_params(params) do
+    filtered_keys = [
+      "email",
+      "expires_at",
+      "id",
+      "identifier",
+      "inserted_at",
+      "token",
+      "updated_at"
+    ]
+
     params
     |> Enum.map(fn {key, value} ->
       cond do
         value == nil or value == "" -> {key, value}
-        to_string(key) =~ ~r/(email|token|id|updated_at|identifier|inserted_at)\z/ -> {key, "***"}
+        to_string(key) =~ ~r/(#{Enum.join(filtered_keys, "|")})\z/ -> {key, "***"}
         match?(%{__struct__: _}, value) -> {key, value}
         is_binary(value) -> {key, value}
         is_list(value) -> {key, filter_params(value)}
