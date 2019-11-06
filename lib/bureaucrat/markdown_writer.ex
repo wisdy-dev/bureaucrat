@@ -225,6 +225,7 @@ defmodule Bureaucrat.MarkdownWriter do
 
   defp filter_params(params) do
     filtered_keys = [
+      "code",
       "email",
       "expires_at",
       "id",
