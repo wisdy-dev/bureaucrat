@@ -233,6 +233,7 @@ defmodule Bureaucrat.MarkdownWriter do
       "id",
       "identifier",
       "inserted_at",
+      "path",
       "registered_at",
       "token",
       "updated_at"
