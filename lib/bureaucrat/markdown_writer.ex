@@ -244,6 +244,7 @@ defmodule Bureaucrat.MarkdownWriter do
       cond do
         value == nil or value == "" -> {key, value}
         to_string(key) =~ ~r/(#{Enum.join(filtered_keys, "|")})\z/ -> {key, "***"}
+        match?(%{__struct__: Plug.Upload}, value) -> {key, filter_params(Map.from_struct(value))}
         match?(%{__struct__: _}, value) -> {key, value}
         is_binary(value) -> {key, value}
         is_list(value) -> {key, filter_params(value)}
