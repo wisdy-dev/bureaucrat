@@ -219,6 +219,10 @@ defmodule Bureaucrat.MarkdownWriter do
     Enum.map(params, &filter_params/1)
   end
 
+  defp filter_params(value) when is_number(value) do
+    value
+  end
+
   defp filter_params(value) when is_binary(value) do
     String.replace(value, ~r/[-0-9a-f]{36,}/, "***")
   end
