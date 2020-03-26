@@ -227,27 +227,28 @@ defmodule Bureaucrat.MarkdownWriter do
     String.replace(value, ~r/[-0-9a-f]{36,}/, "***")
   end
 
-  defp filter_params(params) do
-    filtered_keys = [
-      "code",
-      "confirmed_at",
-      "created_at",
-      "email",
-      "expires_at",
-      "id",
-      "identifier",
-      "inserted_at",
-      "path",
-      "registered_at",
-      "token",
-      "updated_at"
-    ]
+  @filtered_keys [
+    "access_token",
+    "code",
+    "confirmed_at",
+    "created_at",
+    "email",
+    "expires_at",
+    "id",
+    "identifier",
+    "inserted_at",
+    "path",
+    "registered_at",
+    "token",
+    "updated_at"
+  ]
 
+  defp filter_params(params) do
     params
     |> Enum.map(fn {key, value} ->
       cond do
         value == nil or value == "" -> {key, value}
-        to_string(key) =~ ~r/(#{Enum.join(filtered_keys, "|")})\z/ -> {key, "***"}
+        to_string(key) =~ ~r/(#{Enum.join(@filtered_keys, "|")})\z/ -> {key, "***"}
         match?(%{__struct__: Plug.Upload}, value) -> {key, filter_params(Map.from_struct(value))}
         match?(%{__struct__: _}, value) -> {key, value}
         is_binary(value) -> {key, value}
