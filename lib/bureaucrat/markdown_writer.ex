@@ -233,12 +233,14 @@ defmodule Bureaucrat.MarkdownWriter do
     "confirmed_at",
     "created_at",
     "email",
+    "ends_at",
     "expires_at",
     "id",
     "identifier",
     "inserted_at",
     "path",
     "registered_at",
+    "starts_at",
     "token",
     "updated_at"
   ]
